@@ -6,7 +6,7 @@ Tecnologias utilizadas: Java e Spring Boot
 <br>
 
 # 💻 Rodando a Aplicação (Lista 01 e 02)
-Basta clonar o repositório e rodar o arquivo AutomanagerApplication
+Clone o repositório e rode o arquivo AutomanagerApplication como uma Aplicação Java
 <br>
 <br>
 Caminho do arquivo:
