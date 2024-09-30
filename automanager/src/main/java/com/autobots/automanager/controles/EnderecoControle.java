@@ -5,8 +5,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,33 +25,24 @@ public class EnderecoControle {
     private ClienteServico clienteServico;
 
     @GetMapping
-    public ResponseEntity<List<EntityModel<Endereco>>> obterTodosEnderecos() {
+    public ResponseEntity<List<Endereco>> obterTodosEnderecos() {
         List<Endereco> enderecos = enderecoServico.obterTodos();
-        List<EntityModel<Endereco>> enderecoModels = enderecos.stream()
-            .map(endereco -> {
-                EntityModel<Endereco> enderecoModel = EntityModel.of(endereco);
-                enderecoModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(EnderecoControle.class).obterEnderecoPorId(endereco.getId())).withSelfRel());
-                return enderecoModel;
-            }).toList();
-        return new ResponseEntity<>(enderecoModels, HttpStatus.OK);
+        return new ResponseEntity<>(enderecos, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Endereco>> obterEnderecoPorId(@PathVariable Long id) {
+    public ResponseEntity<Endereco> obterEnderecoPorId(@PathVariable Long id) {
         Optional<Endereco> enderecoOpt = enderecoServico.obterPorId(id);
         if (enderecoOpt.isPresent()) {
             Endereco endereco = enderecoOpt.get();
-            EntityModel<Endereco> enderecoModel = EntityModel.of(endereco);
-            enderecoModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(EnderecoControle.class).obterEnderecoPorId(id)).withSelfRel());
-            enderecoModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(EnderecoControle.class).obterTodosEnderecos()).withRel("enderecos"));
-            return new ResponseEntity<>(enderecoModel, HttpStatus.OK);
+            return new ResponseEntity<>(endereco, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     @PostMapping("/{clienteId}/adicionar")
-    public ResponseEntity<EntityModel<Cliente>> adicionarEnderecoAoCliente(
+    public ResponseEntity<Cliente> adicionarEnderecoAoCliente(
         @PathVariable Long clienteId,
         @RequestBody Endereco novoEndereco) {
 
@@ -67,17 +56,14 @@ public class EnderecoControle {
 
             cliente.setEndereco(novoEndereco);
             clienteServico.salvar(cliente);
-            EntityModel<Cliente> clienteModel = EntityModel.of(cliente);
-            clienteModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(ClienteControle.class).obterCliente(clienteId)).withSelfRel());
-            clienteModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(EnderecoControle.class).obterEnderecoPorId(novoEndereco.getId())).withRel("endereco"));
-            return new ResponseEntity<>(clienteModel, HttpStatus.CREATED);
+            return new ResponseEntity<>(cliente, HttpStatus.CREATED);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EntityModel<Endereco>> atualizarEndereco(
+    public ResponseEntity<Endereco> atualizarEndereco(
         @PathVariable Long id,
         @RequestBody Endereco enderecoAtualizado) {
 
@@ -92,10 +78,7 @@ public class EnderecoControle {
             endereco.setCodigoPostal(enderecoAtualizado.getCodigoPostal());
             endereco.setInformacoesAdicionais(enderecoAtualizado.getInformacoesAdicionais());
             enderecoServico.salvar(endereco);
-            EntityModel<Endereco> enderecoModel = EntityModel.of(endereco);
-            enderecoModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(EnderecoControle.class).obterEnderecoPorId(id)).withSelfRel());
-            enderecoModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(EnderecoControle.class).obterTodosEnderecos()).withRel("enderecos"));
-            return new ResponseEntity<>(enderecoModel, HttpStatus.OK);
+            return new ResponseEntity<>(endereco, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

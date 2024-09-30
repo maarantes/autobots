@@ -6,8 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +26,7 @@ public class TelefoneControle {
     private ClienteServico clienteServico;
 
     @PostMapping("/{clienteId}/adicionar")
-    public ResponseEntity<EntityModel<Cliente>> adicionarTelefoneAoCliente(
+    public ResponseEntity<Cliente> adicionarTelefoneAoCliente(
         @PathVariable Long clienteId,
         @RequestBody Telefone telefone) {
 
@@ -37,46 +35,31 @@ public class TelefoneControle {
             Cliente cliente = clienteOpt.get();
             cliente.getTelefones().add(telefone);
             clienteServico.salvar(cliente);
-            EntityModel<Cliente> clienteModel = EntityModel.of(cliente);
-            clienteModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(ClienteControle.class).obterCliente(clienteId)).withSelfRel());
-            clienteModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(TelefoneControle.class).obterTelefonesPorCliente(clienteId)).withRel("telefones"));
-            return new ResponseEntity<>(clienteModel, HttpStatus.CREATED);
+            return new ResponseEntity<>(cliente, HttpStatus.CREATED);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     @GetMapping
-    public ResponseEntity<List<EntityModel<Telefone>>> obterTodosTelefones() {
+    public ResponseEntity<List<Telefone>> obterTodosTelefones() {
         List<Telefone> telefones = telefoneServico.obterTodos();
-        List<EntityModel<Telefone>> telefoneModels = telefones.stream()
-            .map(telefone -> {
-                EntityModel<Telefone> telefoneModel = EntityModel.of(telefone);
-                telefoneModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(TelefoneControle.class).obterTelefonesPorCliente(telefone.getId())).withSelfRel());
-                return telefoneModel;
-            }).toList();
-        return new ResponseEntity<>(telefoneModels, HttpStatus.OK);
+        return new ResponseEntity<>(telefones, HttpStatus.OK);
     }
 
     @GetMapping("/{clienteId}")
-    public ResponseEntity<List<EntityModel<Telefone>>> obterTelefonesPorCliente(@PathVariable Long clienteId) {
+    public ResponseEntity<List<Telefone>> obterTelefonesPorCliente(@PathVariable Long clienteId) {
         Optional<Cliente> clienteOpt = clienteServico.obterPorId(clienteId);
         if (clienteOpt.isPresent()) {
             List<Telefone> telefones = clienteOpt.get().getTelefones();
-            List<EntityModel<Telefone>> telefoneModels = telefones.stream()
-                .map(telefone -> {
-                    EntityModel<Telefone> telefoneModel = EntityModel.of(telefone);
-                    telefoneModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(TelefoneControle.class).obterTelefonesPorCliente(clienteId)).withSelfRel());
-                    return telefoneModel;
-                }).toList();
-            return new ResponseEntity<>(telefoneModels, HttpStatus.OK);
+            return new ResponseEntity<>(telefones, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     @PutMapping("/{telefoneId}")
-    public ResponseEntity<EntityModel<Telefone>> atualizarTelefone(
+    public ResponseEntity<Telefone> atualizarTelefone(
         @PathVariable Long telefoneId,
         @RequestBody Telefone telefoneAtualizado) {
 
@@ -86,9 +69,7 @@ public class TelefoneControle {
             telefone.setDdd(telefoneAtualizado.getDdd());
             telefone.setNumero(telefoneAtualizado.getNumero());
             telefoneServico.salvar(telefone);
-            EntityModel<Telefone> telefoneModel = EntityModel.of(telefone);
-            telefoneModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(TelefoneControle.class).obterTelefonesPorCliente(telefone.getId())).withSelfRel());
-            return new ResponseEntity<>(telefoneModel, HttpStatus.OK);
+            return new ResponseEntity<>(telefone, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -125,7 +106,4 @@ public class TelefoneControle {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-
-
 }
